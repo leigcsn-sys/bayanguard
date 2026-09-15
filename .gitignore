@@ -3,45 +3,17 @@ venv/
 env/
 ENV/
 
-# Python
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
-*.swo
-*~
-
-# Jupyter
-.ipynb_checkpoints
-
-# Environment variables
-.env
-
-# Generated data and models (large files - regenerate with scripts)
-data/*.csv
-model/*.pkl
-model/*.csv
 
 # OS files
 .DS_Store
