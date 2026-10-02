@@ -11,6 +11,7 @@ app = FastAPI(title="BayanGuard API")
 model_path = Path(__file__).parent.parent.parent / "model" / "fraud_model.pkl"
 model = joblib.load(model_path)
 feature_names = model.get_booster().feature_names
+transaction_history = {}
 
 def heuristic_risk(amount, hour, category, merchant):
     score = 0.05
@@ -38,8 +39,9 @@ def health():
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(tx: TransactionRequest):
-    df = pd.DataFrame([tx.model_dump()])
-    df = engineer_features(df)
+    prior_transactions = transaction_history.get(tx.user_id, [])
+    df = pd.DataFrame([*prior_transactions, tx.model_dump()])
+    df = engineer_features(df).loc[[len(prior_transactions)]]
     
     drop_cols = ["transaction_id", "user_id", "timestamp", "merchant"]
     X = df.drop(columns=[c for c in drop_cols if c in df.columns])
@@ -60,6 +62,7 @@ def predict(tx: TransactionRequest):
         final_proba = model_proba
     
     pred = final_proba > 0.5
+    transaction_history.setdefault(tx.user_id, []).append(tx.model_dump())
     
     return PredictionResponse(
         transaction_id=tx.transaction_id or str(uuid.uuid4()),
