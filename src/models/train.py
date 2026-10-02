@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_auc_score, average_precision_score
 import xgboost as xgb
 import joblib
@@ -19,9 +18,12 @@ def main():
     X = df.drop(columns=[c for c in drop_cols if c in df.columns])
     X = pd.get_dummies(X, drop_first=True)
     
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
+    time_col = "transaction_timestamp" if "transaction_timestamp" in df.columns else "timestamp"
+    chronological_order = df[time_col].pipe(pd.to_datetime).sort_values(kind="stable").index
+    split_at = int(len(chronological_order) * 0.8)
+    train_idx, test_idx = chronological_order[:split_at], chronological_order[split_at:]
+    X_train, X_test = X.loc[train_idx], X.loc[test_idx]
+    y_train, y_test = y.loc[train_idx], y.loc[test_idx]
     
     fraud_count = y_train.sum()
     scale_pos_weight = (len(y_train) - fraud_count) / fraud_count if fraud_count > 0 else 1
